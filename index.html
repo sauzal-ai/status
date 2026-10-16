@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estado de Sauzal</title>
+<meta name="description" content="Estado en vivo de los servicios de Sauzal: API, consola y red de nodos.">
+<style>
+  :root {
+    --bg: #070b09; --card: #0d1310; --line: #1b2620; --ink: #eaf3ec; --muted: #8ca396;
+    --ok: #3fcf7f; --bad: #ff6b6b; --warn: #f2b33d;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #f6f8f6; --card: #ffffff; --line: #dde5df; --ink: #0d1310; --muted: #5b6b61; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  .eyebrow { font: 600 12px/1 ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--ok); }
+  h1 { font-size: 30px; margin: 8px 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .banner { border-radius: 14px; padding: 18px 20px; font-weight: 600; font-size: 17px; border: 1px solid var(--line); background: var(--card); display: flex; gap: 12px; align-items: center; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--muted); }
+  .up .dot { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 25%, transparent); }
+  .down .dot { background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 25%, transparent); }
+  .unknown .dot { background: var(--warn); }
+  .services { margin-top: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  .svc { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .svc:first-child { border-top: 0; }
+  .svc b { display: block; }
+  .svc small { color: var(--muted); }
+  .state { font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  h2 { font-size: 16px; margin: 32px 0 10px; }
+  ul.inc { list-style: none; padding: 0; margin: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  ul.inc li { padding: 12px 18px; border-top: 1px solid var(--line); }
+  ul.inc li:first-child { border-top: 0; }
+  .muted { color: var(--muted); }
+  footer { margin-top: 36px; color: var(--muted); font-size: 13px; }
+  a { color: var(--ok); }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Sauzal</p>
+  <h1>Estado de los servicios</h1>
+  <p class="sub">Esta página vive fuera de los servidores de Sauzal, así que sigue funcionando aunque se caigan.</p>
+
+  <div id="banner" class="banner unknown"><span class="dot"></span><span id="banner-text">Consultando…</span></div>
+
+  <div class="services" id="services"></div>
+
+  <h2>Incidentes recientes</h2>
+  <ul class="inc" id="incidents"><li class="muted">Cargando…</li></ul>
+
+  <footer>
+    <p id="updated" class="muted"></p>
+    <p>El monitor revisa cada minuto. Los nodos no necesitan hacer nada durante una caída: reintentan solos y vuelven a trabajar apenas el servidor responde.</p>
+  </footer>
+</main>
+<script>
+  // Los datos los publica el monitor externo (scripts/monitor_externo.py del
+  // repo de Sauzal) en status.json. Se leen por la API de GitHub para no
+  // esperar la caché de 10 min de Pages; si falla, el archivo publicado.
+  const API = "https://api.github.com/repos/sauzal-ai/status/contents/status.json";
+  const LABELS = {
+    api: ["API y red de nodos", "sauzal.net"],
+    web: ["Consola y Playground", "sauzal.ai"],
+  };
+  const fmt = (t) => new Date(t * 1000).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" });
+  const dur = (s) => s < 3600 ? `${Math.max(1, Math.round(s / 60))} min` : `${(s / 3600).toFixed(1)} h`;
+
+  async function load() {
+    try {
+      const r = await fetch(API, { cache: "no-store", headers: { Accept: "application/vnd.github.raw+json" } });
+      if (!r.ok) throw new Error(r.status);
+      return await r.json();
+    } catch {
+      const r = await fetch("status.json?t=" + Date.now(), { cache: "no-store" });
+      return r.json();
+    }
+  }
+
+  function render(d) {
+    const now = Date.now() / 1000;
+    const stale = now - d.updated_at > 45 * 60;
+    const services = Object.entries(d.services || {});
+    const anyDown = services.some(([, s]) => s.state === "down");
+    const banner = document.getElementById("banner");
+    banner.className = "banner " + (stale ? "unknown" : anyDown ? "down" : "up");
+    document.getElementById("banner-text").textContent = stale
+      ? "El monitor no informa hace un rato: el estado puede estar desactualizado."
+      : anyDown ? "Hay servicios caídos. Estamos trabajando para resolverlo." : "Todos los servicios funcionan con normalidad.";
+    document.getElementById("services").innerHTML = services.map(([k, s]) => {
+      const [name, host] = LABELS[k] || [k, ""];
+      const cls = s.state === "up" ? "up" : s.state === "down" ? "down" : "unknown";
+      const txt = s.state === "up" ? "Funcionando" : s.state === "down" ? `Caído desde ${fmt(s.since)}` : "Sin datos";
+      return `<div class="svc ${cls}"><div><b>${name}</b><small>${host}</small></div><span class="state"><span class="dot"></span>${txt}</span></div>`;
+    }).join("");
+    const inc = (d.incidents || []).slice().reverse();
+    document.getElementById("incidents").innerHTML = inc.length
+      ? inc.map((i) => {
+          const [name] = LABELS[i.service] || [i.service];
+          const end = i.end ? `${fmt(i.end)} · duró ${dur(i.end - i.start)}` : "en curso";
+          return `<li><b>${name}</b> caído · ${fmt(i.start)} → ${end}${i.note ? `<br><span class="muted">${i.note}</span>` : ""}</li>`;
+        }).join("")
+      : '<li class="muted">Sin incidentes registrados.</li>';
+    document.getElementById("updated").textContent = `Última comprobación del monitor: ${fmt(d.updated_at)}.`;
+  }
+
+  async function refresh() {
+    try { render(await load()); }
+    catch { document.getElementById("banner-text").textContent = "No se pudo leer el estado. Probá recargar en un minuto."; }
+  }
+  refresh();
+  setInterval(refresh, 120000);  // la API de GitHub permite 60 consultas por hora por visitante
+</script>
+</body>
+</html>
