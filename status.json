@@ -1,8 +1,27 @@
 {
- "updated_at": 1792189558,
- "services": {"api": {"state": "up", "since": 1792187940}, "web": {"state": "up", "since": 1792187940}},
+ "updated_at": 1792189588.8364305,
+ "services": {
+  "api": {
+   "state": "up",
+   "since": 1792187940
+  },
+  "web": {
+   "state": "up",
+   "since": 1792187940
+  }
+ },
  "incidents": [
-  {"service": "api", "start": 1792185000, "end": 1792187940, "note": "Mantenimiento de emergencia de Hostinger por la vulnerabilidad CVE-2026-99999 (reinicio del servidor)."},
-  {"service": "web", "start": 1792185000, "end": 1792187940, "note": "Mantenimiento de emergencia de Hostinger por la vulnerabilidad CVE-2026-99999 (reinicio del servidor)."}
+  {
+   "service": "api",
+   "start": 1792185000,
+   "end": 1792187940,
+   "note": "Mantenimiento de emergencia de Hostinger por la vulnerabilidad CVE-2026-99999 (reinicio del servidor)."
+  },
+  {
+   "service": "web",
+   "start": 1792185000,
+   "end": 1792187940,
+   "note": "Mantenimiento de emergencia de Hostinger por la vulnerabilidad CVE-2026-99999 (reinicio del servidor)."
+  }
  ]
 }
