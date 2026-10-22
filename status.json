@@ -1,13 +1,13 @@
 {
- "updated_at": 1792641484.2699938,
+ "updated_at": 1792642024.3193836,
  "services": {
   "api": {
    "state": "up",
    "since": 1792187940
   },
   "web": {
-   "state": "up",
-   "since": 1792187940
+   "state": "down",
+   "since": 1792641964.3193836
   }
  },
  "incidents": [
@@ -22,6 +22,11 @@
    "start": 1792185000,
    "end": 1792187940,
    "note": "Mantenimiento de emergencia de Hostinger por la vulnerabilidad CVE-2026-99999 (reinicio del servidor)."
+  },
+  {
+   "service": "web",
+   "start": 1792641964.3193836,
+   "end": null
   }
  ]
 }
