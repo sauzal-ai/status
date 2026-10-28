@@ -1,13 +1,13 @@
 {
- "updated_at": 1793200254.4214127,
+ "updated_at": 1793201154.5012875,
  "services": {
   "api": {
-   "state": "up",
-   "since": 1792784418.0172267
+   "state": "down",
+   "since": 1793201094.5012875
   },
   "web": {
-   "state": "up",
-   "since": 1792784358.0062
+   "state": "down",
+   "since": 1793201094.5012875
   }
  },
  "incidents": [
@@ -37,6 +37,16 @@
    "service": "web",
    "start": 1792780397.8679888,
    "end": 1792784358.0062
+  },
+  {
+   "service": "api",
+   "start": 1793201094.5012875,
+   "end": null
+  },
+  {
+   "service": "web",
+   "start": 1793201094.5012875,
+   "end": null
   }
  ]
 }
